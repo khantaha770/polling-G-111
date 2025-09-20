@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PollVote - Online Polling System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen {
+            padding: 30px;
+            display: none;
+        }
+
+        .active-screen {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        h2 {
+            color: #444;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo i {
+            font-size: 3.5rem;
+            color: #6a11cb;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: #6a11cb;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .poll-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .poll-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .poll-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .poll-info {
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        .vote-option {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .vote-option:hover {
+            background: #e9ecef;
+        }
+
+        .selected {
+            background: #d1e7ff;
+            border: 2px solid #0d6efd;
+        }
+
+        .chart-container {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+        }
+
+        .result-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .result-fill {
+            height: 100%;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            border-radius: 5px;
+            width: 0;
+            transition: width 1s ease-out;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .nav button {
+            width: 48%;
+        }
+
+        .secondary-btn {
+            background: linear-gradient(to right, #868e96, #adb5bd);
+        }
+
+        .error {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .success {
+            color: #198754;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .results-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .chart-wrapper {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            min-width: 300px;
+            max-width: 450px;
+        }
+
+        .chart-title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #444;
+            font-size: 1.2rem;
+        }
+
+        .result-stat {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 1.1rem;
+            color: #555;
+        }
+
+        .switch-form {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .switch-form a {
+            color: #6a11cb;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .user-info {
+            text-align: right;
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .option-input {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .option-input input {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .option-input button {
+            width: auto;
+            padding: 10px 15px;
+        }
+
+        .authorized-emails {
+            margin-top: 10px;
+        }
+
+        .authorized-emails input {
+            width: calc(100% - 100px);
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .authorized-emails button {
+            width: 90px;
+            display: inline-block;
+            padding: 12px;
+        }
+
+        .email-list {
+            margin-top: 10px;
+        }
+
+        .email-item {
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 5px;
+            font-size: 0.9rem;
+        }
+
+        .email-item i {
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .share-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .share-link {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        .share-link input {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .share-link button {
+            width: auto;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .chart-container {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .results-container {
+                flex-direction: column;
+            }
+            
+            .authorized-emails input {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .authorized-emails button {
+                width: 100%;
+            }
+            
+            .share-link {
+                flex-direction: column;
+            }
+            
+            .share-link input {
+                border-radius: 10px;
+                margin-bottom: 10px;
+            }
+            
+            .share-link button {
+                border-radius: 10px;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active-screen">
+            <div class="logo">
+                <i class="fas fa-vote-yea"></i>
+                <h1>PollVote</h1>
+                <p>Interactive Polling System</p>
+            </div>
+            
+            <h2>Login to Your Account</h2>
+            
+            <div class="form-group">
+                <label for="login-email">Email</label>
+                <input type="email" id="login-email" placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" placeholder="Enter your password">
+            </div>
+            
+            <button onclick="login()">Login</button>
+            
+            <div class="switch-form">
+                <p>Don't have an account? <a onclick="showScreen('register-screen')">Register here</a></p>
+            </div>
+            
+            <p class="error" id="login-error"></p>
+        </div>
+
+        <!-- Register Screen -->
+        <div id="register-screen" class="screen">
+            <div class="logo">
+                <i class="fas fa-user-plus"></i>
+                <h1>Create Account</h1>
+            </div>
+            
+            <h2>Register for PollVote</h2>
+            
+            <div class="form-group">
+                <label for="register-name">Full Name</label>
+                <input type="text" id="register-name" placeholder="Enter your full name">
+            </div>
+            
+            <div class="form-group">
+                <label for="register-email">Email</label>
+                <input type="email" id="register-email" placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label for="register-password">Password</label>
+                <input type="password" id="register-password" placeholder="Create a password">
+            </div>
+            
+            <button onclick="register()">Register</button>
+            
+            <div class="switch-form">
+                <p>Already have an account? <a onclick="showScreen('login-screen')">Login here</a></p>
+            </div>
+            
+            <p class="error" id="register-error"></p>
+        </div>
+
+        <!-- Main Screen -->
+        <div id="main-screen" class="screen">
+            <div class="user-info">
+                Welcome, <span id="user-name">User</span>! | <a onclick="logout()">Logout</a>
+            </div>
+            
+            <div class="logo">
+                <i class="fas fa-vote-yea"></i>
+                <h1>PollVote</h1>
+                <p>Interactive Polling System</p>
+            </div>
+            
+            <h2>Current Polls</h2>
+            
+            <div id="polls-container">
+                <!-- Polls will be loaded here -->
+            </div>
+            
+            <button onclick="showScreen('create-screen')">Create New Poll</button>
+        </div>
+
+        <!-- Create Poll Screen -->
+        <div id="create-screen" class="screen">
+            <div class="user-info">
+                Welcome, <span id="create-user-name">User</span>! | <a onclick="logout()">Logout</a>
+            </div>
+            
+            <div class="logo">
+                <i class="fas fa-plus-circle"></i>
+                <h1>Create New Poll</h1>
+            </div>
+            
+            <div class="form-group">
+                <label for="poll-topic">Poll Topic</label>
+                <input type="text" id="poll-topic" placeholder="Enter poll topic">
+            </div>
+            
+            <div class="form-group">
+                <label>Poll Options</label>
+                <div id="poll-options">
+                    <div class="option-input">
+                        <input type="text" placeholder="Option 1">
+                        <button class="remove-option-btn" disabled><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="option-input">
+                        <input type="text" placeholder="Option 2">
+                        <button class="remove-option-btn" disabled><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                <button id="add-option-btn">Add Option</button>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="restrict-access">
+                    <label for="restrict-access">Restrict voting to specific users</label>
+                </div>
+            </div>
+            
+            <div id="authorized-emails-container" style="display: none;">
+                <label>Authorized Emails</label>
+                <div class="authorized-emails">
+                    <input type="email" id="auth-email" placeholder="Enter email">
+                    <button id="add-email-btn">Add</button>
+                </div>
+                <div id="email-list" class="email-list">
+                    <!-- Authorized emails will be added here -->
+                </div>
+            </div>
+            
+            <button id="publish-poll-btn">Create Poll</button>
+            
+            <div class="nav">
+                <button class="secondary-btn" onclick="showScreen('main-screen')">Back to Main</button>
+            </div>
+            
+            <p class="error" id="create-poll-error"></p>
+            <p class="success" id="create-poll-success"></p>
+        </div>
+
+        <!-- Vote Screen -->
+        <div id="vote-screen" class="screen">
+            <div class="user-info">
+                Welcome, <span id="vote-user-name">User</span>! | <a onclick="logout()">Logout</a>
+            </div>
+            
+            <div class="logo">
+                <i class="fas fa-check-circle"></i>
+                <h1 id="vote-title">Cast Your Vote</h1>
+            </div>
+            
+            <div id="vote-options">
+                <!-- Options will be added here -->
+            </div>
+            
+            <button onclick="submitVote()">Submit Vote</button>
+            
+            <div class="nav">
+                <button class="secondary-btn" onclick="showScreen('main-screen')">Back to Main</button>
+            </div>
+            
+            <p class="error" id="vote-error"></p>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <div class="user-info">
+                Welcome, <span id="results-user-name">User</span>! | <a onclick="logout()">Logout</a>
+            </div>
+            
+            <div class="logo">
+                <i class="fas fa-chart-pie"></i>
+                <h1 id="results-title">Poll Results</h1>
+            </div>
+            
+            <div class="results-container">
+                <div class="chart-wrapper">
+                    <div class="chart-title">Vote Distribution</div>
+                    <div class="chart-container">
+                        <canvas id="pie-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-wrapper">
+                    <div class="chart-title">Vote Comparison</div>
+                    <div class="chart-container">
+                        <canvas id="bar-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="results-data" style="margin-top: 20px;">
+                <!-- Results will be added here -->
+            </div>
+            
+            <div class="share-section">
+                <h3>Share this Poll</h3>
+                <div class="share-link">
+                    <input type="text" id="poll-link" readonly>
+                    <button onclick="copyPollLink()"><i class="fas fa-copy"></i> Copy Link</button>
+                </div>
+            </div>
+            
+            <div class="nav">
+                <button class="secondary-btn" onclick="showScreen('main-screen')">Back to Main</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const screens = document.querySelectorAll('.screen');
+        
+        // Sample poll data
+        let polls = JSON.parse(localStorage.getItem('polls')) || {
+            programming: {
+                id: 'programming',
+                title: "Favorite Programming Language",
+                options: [
+                    { text: "JavaScript", votes: 45 },
+                    { text: "Python", votes: 32 },
+                    { text: "Java", votes: 24 },
+                    { text: "C#", votes: 23 }
+                ],
+                authorizedEmails: [],
+                votes: []
+            },
+            social: {
+                id: 'social',
+                title: "Best Social Media Platform",
+                options: [
+                    { text: "Instagram", votes: 28 },
+                    { text: "Facebook", votes: 22 },
+                    { text: "TikTok", votes: 19 },
+                    { text: "Twitter", votes: 15 },
+                    { text: "LinkedIn", votes: 14 }
+                ],
+                authorizedEmails: [],
+                votes: []
+            }
+        };
+        
+        let currentPoll = null;
+        let selectedOption = null;
+        let currentUser = null;
+        
+        // Show a specific screen
+        function showScreen(screenId) {
+            screens.forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(screenId).classList.add('active-screen');
+            
+            // Update user name displays if user is logged in
+            if (currentUser) {
+                const userElements = document.querySelectorAll('#user-name, #create-user-name, #vote-user-name, #results-user-name');
+                userElements.forEach(el => {
+                    el.textContent = currentUser.name;
+                });
+            }
+            
+            // Load polls if going to main screen
+            if (screenId === 'main-screen') {
+                loadPolls();
+            }
+        }
+        
+        // Load polls to main screen
+        function loadPolls() {
+            const pollsContainer = document.getElementById('polls-container');
+            pollsContainer.innerHTML = '';
+            
+            // Get updated polls from localStorage
+            const updatedPolls = JSON.parse(localStorage.getItem('polls')) || polls;
+            
+            // Calculate total votes for each poll
+            for (const pollId in updatedPolls) {
+                const poll = updatedPolls[pollId];
+                poll.totalVotes = poll.votes ? poll.votes.length : 0;
+            }
+            
+            // Display each poll
+            for (const pollId in updatedPolls) {
+                if (updatedPolls.hasOwnProperty(pollId)) {
+                    const poll = updatedPolls[pollId];
+                    const pollEl = document.createElement('div');
+                    pollEl.className = 'poll-card';
+                    pollEl.innerHTML = `
+                        <h3 class="poll-title">${poll.title}</h3>
+                        <p class="poll-info">${poll.options.length} options | ${poll.totalVotes} votes</p>
+                    `;
+                    pollEl.addEventListener('click', () => {
+                        showPoll(pollId);
+                    });
+                    pollsContainer.appendChild(pollEl);
+                }
+            }
+            
+            // If no polls, show message
+            if (Object.keys(updatedPolls).length === 0) {
+                pollsContainer.innerHTML = '<p>No polls available. Create the first one!</p>';
+            }
+        }
+        
+        // Register a new user
+        function register() {
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const errorEl = document.getElementById('register-error');
+            
+            // Basic validation
+            if (!name || !email || !password) {
+                errorEl.textContent = 'Please fill in all fields';
+                return;
+            }
+            
+            if (password.length < 6) {
+                errorEl.textContent = 'Password must be at least 6 characters';
+                return;
+            }
+            
+            // Check if user already exists
+            const users = JSON.parse(localStorage.getItem('pollUsers')) || [];
+            if (users.some(user => user.email === email)) {
+                errorEl.textContent = 'User with this email already exists';
+                return;
+            }
+            
+            // Create new user
+            const newUser = {
+                id: Date.now().toString(),
+                name,
+                email,
+                password
+            };
+            
+            // Save user
+            users.push(newUser);
+            localStorage.setItem('pollUsers', JSON.stringify(users));
+            
+            // Set as current user
+            currentUser = newUser;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Clear form and error
+            document.getElementById('register-name').value = '';
+            document.getElementById('register-email').value = '';
+            document.getElementById('register-password').value = '';
+            errorEl.textContent = '';
+            
+            // Show main screen
+            showScreen('main-screen');
+        }
+        
+        // Login user
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            
+            // Basic validation
+            if (!email || !password) {
+                errorEl.textContent = 'Please fill in all fields';
+                return;
+            }
+            
+            // Check if user exists
+            const users = JSON.parse(localStorage.getItem('pollUsers')) || [];
+            const user = users.find(user => user.email === email && user.password === password);
+            
+            if (!user) {
+                errorEl.textContent = 'Invalid email or password';
+                return;
+            }
+            
+            // Set as current user
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Clear form and error
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+            errorEl.textContent = '';
+            
+            // Show main screen
+            showScreen('main-screen');
+        }
+        
+        // Logout user
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showScreen('login-screen');
+        }
+        
+        // Check if user is logged in on page load
+        function checkAuth() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showScreen('main-screen');
+            } else {
+                showScreen('login-screen');
+            }
+        }
+        
+        // Show poll for voting
+        function showPoll(pollId) {
+            if (!currentUser) {
+                showScreen('login-screen');
+                return;
+            }
+            
+            const allPolls = JSON.parse(localStorage.getItem('polls')) || polls;
+            currentPoll = structuredClone(allPolls[pollId]);
+            
+            if (!currentPoll) {
+                alert('Poll not found');
+                return;
+            }
+            
+            document.getElementById('vote-title').textContent = currentPoll.title;
+            
+            // Check if poll is restricted and if user has access
+            if (currentPoll.authorizedEmails && currentPoll.authorizedEmails.length > 0) {
+                if (!currentPoll.authorizedEmails.includes(currentUser.email)) {
+                    alert('You do not have permission to vote in this poll');
+                    showScreen('main-screen');
+                    return;
+                }
+            }
+            
+            // Check if user has already voted
+            if (currentPoll.votes && currentPoll.votes.some(vote => vote.userId === currentUser.id)) {
+                // User has already voted, show results
+                showResults();
+                return;
+            }
+            
+            const voteOptions = document.getElementById('vote-options');
+            voteOptions.innerHTML = '';
+            
+            currentPoll.options.forEach((option, index) => {
+                const optionEl = document.createElement('div');
+                optionEl.className = 'vote-option';
+                optionEl.textContent = option.text;
+                optionEl.dataset.index = index;
+                optionEl.onclick = function() {
+                    document.querySelectorAll('.vote-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedOption = parseInt(this.dataset.index);
+                };
+                voteOptions.appendChild(optionEl);
+            });
+            
+            showScreen('vote-screen');
+        }
+        
+        // Submit vote
+        function submitVote() {
+            if (selectedOption === null) {
+                document.getElementById('vote-error').textContent = 'Please select an option first';
+                return;
+            }
+            
+            // Update vote count
+            currentPoll.options[selectedOption].votes++;
+            
+            // Record the vote
+            if (!currentPoll.votes) {
+                currentPoll.votes = [];
+            }
+            
+            currentPoll.votes.push({
+                userId: currentUser.id,
+                optionIndex: selectedOption,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Update polls in storage
+            const allPolls = JSON.parse(localStorage.getItem('polls')) || polls;
+            allPolls[currentPoll.id] = currentPoll;
+            localStorage.setItem('polls', JSON.stringify(allPolls));
+            
+            // Show results
+            showResults();
+        }
+        
+        // Show results
+        function showResults() {
+            document.getElementById('results-title').textContent = currentPoll.title;
+            
+            // Calculate total votes
+            const totalVotes = currentPoll.votes ? currentPoll.votes.length : 0;
+            
+            // Create pie chart
+            const pieCtx = document.getElementById('pie-chart').getContext('2d');
+            if (window.pieChart) {
+                window.pieChart.destroy();
+            }
+            window.pieChart = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: currentPoll.options.map(opt => opt.text),
+                    datasets: [{
+                        data: currentPoll.options.map(opt => opt.votes),
+                        backgroundColor: [
+                            '#6a11cb', '#2575fc', '#0cefeb', '#0cf574', '#eb0c6c',
+                            '#f5e90c', '#f58a0c', '#0c2bf5', '#f50c7a', '#0cf5c4'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const percentage = totalVotes > 0 ? Math.round((value / totalVotes) * 100) : 0;
+                                    return `${context.label}: ${value} votes (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
+            });
+            
+            // Create bar chart
+            const barCtx = document.getElementById('bar-chart').getContext('2d');
+            if (window.barChart) {
+                window.barChart.destroy();
+            }
+            window.barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: currentPoll.options.map(opt => opt.text),
+                    datasets: [{
+                        label: 'Votes',
+                        data: currentPoll.options.map(opt => opt.votes),
+                        backgroundColor: '#2575fc',
+                        borderColor: '#6a11cb',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Display results data
+            const resultsData = document.getElementById('results-data');
+            resultsData.innerHTML = '';
+            
+            const resultStats = document.createElement('div');
+            resultStats.className = 'result-stat';
+            resultStats.textContent = `Total Votes: ${totalVotes}`;
+            resultsData.appendChild(resultStats);
+            
+            currentPoll.options.forEach(option => {
+                const percentage = totalVotes > 0 ? Math.round((option.votes / totalVotes) * 100) : 0;
+                
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.innerHTML = `
+                    <div><strong>${option.text}</strong>: ${option.votes} votes (${percentage}%)</div>
+                    <div class="result-bar">
+                        <div class="result-fill" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+                resultsData.appendChild(resultItem);
+            });
+            
+            // Set poll link
+            document.getElementById('poll-link').value = `${window.location.origin}${window.location.pathname}#poll-${currentPoll.id}`;
+            
+            // Animate the bar fills
+            setTimeout(() => {
+                document.querySelectorAll('.result-fill').forEach(fill => {
+                    fill.style.width = fill.style.width;
+                });
+            }, 100);
+            
+            showScreen('results-screen');
+        }
+        
+        // Copy poll link to clipboard
+        function copyPollLink() {
+            const pollLink = document.getElementById('poll-link');
+            pollLink.select();
+            document.execCommand('copy');
+            alert('Poll link copied to clipboard!');
+        }
+        
+        // Add option to create form
+        document.getElementById('add-option-btn').addEventListener('click', function() {
+            const optionsContainer = document.getElementById('poll-options');
+            const optionCount = optionsContainer.children.length;
+            const optionInput = document.createElement('div');
+            optionInput.className = 'option-input';
+            optionInput.innerHTML = `
+                <input type="text" placeholder="Option ${optionCount + 1}">
+                <button class="remove-option-btn"><i class="fas fa-times"></i></button>
+            `;
+            optionsContainer.appendChild(optionInput);
+
+            // Add event listener to remove button
+            optionInput.querySelector('.remove-option-btn').addEventListener('click', function() {
+                if (optionsContainer.children.length > 2) {
+                    optionsContainer.removeChild(optionInput);
+                }
+            });
+        });
+        
+        // Toggle authorized emails container
+        document.getElementById('restrict-access').addEventListener('change', function() {
+            document.getElementById('authorized-emails-container').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+
+        // Add authorized email
+        document.getElementById('add-email-btn').addEventListener('click', function() {
+            const emailInput = document.getElementById('auth-email');
+            const email = emailInput.value.trim();
+            
+            if (!email) return;
+            
+            const emailList = document.getElementById('email-list');
+            const emailItem = document.createElement('div');
+            emailItem.className = 'email-item';
+            emailItem.innerHTML = `
+                ${email} <i class="fas fa-times"></i>
+            `;
+            
+            // Add event listener to remove button
+            emailItem.querySelector('i').addEventListener('click', function() {
+                emailList.removeChild(emailItem);
+            });
+            
+            emailList.appendChild(emailItem);
+            emailInput.value = '';
+        });
+        
+        // Create new poll
+        document.getElementById('publish-poll-btn').addEventListener('click', function() {
+            if (!currentUser) {
+                showScreen('login-screen');
+                return;
+            }
+            
+            const topic = document.getElementById('poll-topic').value;
+            const optionsInputs = document.getElementById('poll-options').querySelectorAll('input');
+            const restrictAccess = document.getElementById('restrict-access').checked;
+            const emailItems = document.getElementById('email-list').querySelectorAll('.email-item');
+            const errorEl = document.getElementById('create-poll-error');
+            const successEl = document.getElementById('create-poll-success');
+
+            // Validate inputs
+            if (!topic) {
+                errorEl.textContent = 'Please enter a poll topic';
+                return;
+            }
+
+            const options = [];
+            optionsInputs.forEach(input => {
+                if (input.value.trim()) {
+                    options.push({
+                        text: input.value.trim(),
+                        votes: 0
+                    });
+                }
+            });
+
+            if (options.length < 2) {
+                errorEl.textContent = 'Please add at least two options';
+                return;
+            }
+
+            const authorizedEmails = [];
+            if (restrictAccess) {
+                emailItems.forEach(item => {
+                    authorizedEmails.push(item.textContent.split(' ')[0]);
+                });
+
+                if (authorizedEmails.length === 0) {
+                    errorEl.textContent = 'Please add at least one authorized email';
+                    return;
+                }
+            }
+            
+            // Create new poll object
+            const pollId = 'poll-' + Date.now();
+            const newPoll = {
+                id: pollId,
+                title: topic,
+                options: options,
+                authorizedEmails: authorizedEmails,
+                votes: [],
+                owner: currentUser.id
+            };
+            
+            // Save to localStorage
+            const allPolls = JSON.parse(localStorage.getItem('polls')) || {};
+            allPolls[pollId] = newPoll;
+            localStorage.setItem('polls', JSON.stringify(allPolls));
+            
+            // For demo purposes, we'll show the new poll
+            currentPoll = newPoll;
+            showResults();
+            
+            // Reset form
+            document.getElementById('poll-topic').value = '';
+            optionsInputs.forEach(input => input.value = '');
+            document.getElementById('email-list').innerHTML = '';
+            document.getElementById('restrict-access').checked = false;
+            document.getElementById('authorized-emails-container').style.display = 'none';
+            
+            successEl.textContent = 'Poll created successfully!';
+            setTimeout(() => {
+                successEl.textContent = '';
+            }, 3000);
+        });
+        
+        // Initialize option remove buttons
+        document.querySelectorAll('.remove-option-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.parentElement.parentElement.children.length > 2) {
+                    this.parentElement.remove();
+                }
+            });
+        });
+        
+        // Check authentication on page load
+        window.addEventListener('load', function() {
+            checkAuth();
+            
+            // Check if there's a poll ID in the URL hash
+            if (window.location.hash) {
+                const pollId = window.location.hash.substring(1); // Remove the # character
+                const allPolls = JSON.parse(localStorage.getItem('polls')) || polls;
+                
+                if (allPolls[pollId]) {
+                    currentPoll = allPolls[pollId];
+                    showResults();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
